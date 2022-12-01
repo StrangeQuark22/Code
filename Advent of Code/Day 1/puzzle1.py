@@ -1,3 +1,4 @@
+
 import numpy as np
 
 allData = ""
@@ -14,11 +15,4 @@ sums = []
 
 for elf in elfs:
     sums.append(sum(elf))
-
-top = []
-
-for i in range(3):
-    top.append(sums.pop(sums.index(max(sums))))
-
 print("\n\n largest: ", max(sums))
-print("\n\n top 3: ", sum(top))
