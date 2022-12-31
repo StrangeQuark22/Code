@@ -23,89 +23,17 @@ class BankAccount:
         self.data: dict[str, int | float | str] = {
             "balance": balance, 
             "holderName": holderName,
-            "number": Bank.getNumber(),
+            "number": Bank.getAccountNumber(),
             "maxCredit": maxCredit,
             "password": password  
             }
-        self.balance = self.data["balance"]
-        self.number = self.data["number"]
-        self.holderName = self.data["holderName"]
-        self.maxCredit = self.data["maxCredit"]
-        self.password = self.data["password"]
-
+        self.balance: float = float(self.data["balance"])
+        self.number: int = int(self.data["number"])
+        self.holderName: str = str(self.data["holderName"])
+        self.maxCredit: int = int(self.data["maxCredit"])
+        self.password: str = str(self.data["password"])
+        
         Bank.addAccount(self)
-
-    # kolla om angivet lösen stämmer med lösen för angivet konto
-    @staticmethod
-    def checkPassword(password: str, accountNum: int) -> bool:
-        # Kolla om konto existerar
-        while accountNum not in Bank.accounts.keys():
-            warnings.warn("Kontot existerar inte!", Warning)
-            accountNum = int(input("Ange kontonummer igen: "))
-
-        if password == Bank.accounts[accountNum].password:
-            return True
-        else:
-            return False
-
-    # Fråga efter ett värdet för ett nytt lösenord
-    @staticmethod
-    def promptPassword() -> str:
-        return input("Välj lösenord: ")
-
-    # Skaffa ett nytt lösenord
-    @staticmethod
-    def getPassword() -> str:
-        password = BankAccount.promptPassword()
-        while input("Bekräfta lösenord: ") != password:
-            print("Lösenorden matchar inte!")
-            if input("Välj annat lösenord (y/n)? ") in ("y", "Y"):
-                password = BankAccount.promptPassword()
-        return password
-
-    # Ändra lösenord
-    def changePassword(self):
-        if BankAccount.checkPassword(input("Ange ditt gamla lösenord: "), self.number):
-            print("VARNING! Ändring av lösenord går ej att ångra!")
-            if input("Vill du fortfarande fortsätta (y/n)?") in ("y", "Y"):
-                self.password = BankAccount.getPassword()
-            else:
-                return
-        else:
-            print("Fel lösenord, försök igen!")
-            self.changePassword()
-
-    # addera pengar till kontot
-    def addMoney(self):
-        amount = float(input("Hur mycket?\n"))
-        if amount > 0:
-            self.balance += amount
-            self.balance = round(self.balance, 2)
-            self.data["balance"] = self.balance
-            print(f"{amount} kr har lagts till på ditt konto\nDitt nya saldo är {self.balance} kr")
-        else:
-            warnings.warn("Negativ pengsumma eller pengasumma som är 0 är inte tillåtet!", Warning)
-
-    # dra ut pengar, kolla om det är möjligt
-    def withdrawMoney(self):
-        amount = float(input("Hur mycket?\n"))
-        if amount <= self.balance:
-            self.balance -= amount
-            self.balance = round(self.balance, 2)
-            self.data["balance"] = self.balance
-            print(f"{amount} kr har tagits ut ur ditt konto.\nDitt nya saldo är {self.balance} kr")
-        else:
-            warnings.warn("Inte nog med pengar på kontot!", Warning)
-
-    # Ändra maxCredit
-    def changeMaxCredit(self):
-        amount = float(input("Hur mycket?\n"))
-        if amount >= 0:
-            self.maxCredit = int(amount)
-            self.data["maxCredit"] = self.maxCredit
-            print(f"Din nya maximala kredit är {amount} kr")
-        else:
-            warnings.warn("Negativa kreditvärden är omöjliga!", Warning)
 
 
 class Bank:
@@ -131,7 +59,8 @@ class Bank:
         while num in cls.accounts:
             num = random.randint(100000,999999)
         return num
-    # Lägger till ett konto i listan
+    
     @classmethod
     def addAccount(cls, account: BankAccount):      
+        """Adds an account to the class attribute storing all accounts"""
         cls.accounts.update({account.number: account})
