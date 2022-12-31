@@ -1,5 +1,13 @@
-import warnings
+"""
+A module containing my system for managing the bank system from schoold
+
+Classes:
+    BankAccount - Datatype for bank account object
+    Bank - Container for accounts and global systems for the bank
+"""
 import random
+from typing import TextIO
+import json
 
 class BankAccount:
     """
@@ -64,3 +72,14 @@ class Bank:
     def addAccount(cls, account: BankAccount):      
         """Adds an account to the class attribute storing all accounts"""
         cls.accounts.update({account.number: account})
+
+    @classmethod
+    def save(cls, path: str):
+        """Serialise accounts to json and save at path"""
+        with open(path, "w") as file:
+            json.dump(cls.accounts, file)
+    @classmethod
+    def load(cls, path: str):
+        with open(path, "r") as file:
+            """Load serialized accounts from json at path"""
+            cls.accounts = json.load(file)
