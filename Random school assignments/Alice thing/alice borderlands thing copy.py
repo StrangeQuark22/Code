@@ -1,13 +1,13 @@
 import itertools
-from numba import jit, njit
+# from numba import jit, njit
 import numpy as np
-import sympy as sp
+# import sympy as sp
 import matplotlib.pyplot as plt
 
 nums: list[int] = list(range(1, 101))
 
 
-@jit(parallel=True)
+# @jit(parallel=True)
 def getCombs() -> np.ndarray:
     stuff: list[tuple] = []
     for i, item in enumerate(list(itertools.combinations(nums, 5))):
@@ -20,12 +20,12 @@ def getCombs() -> np.ndarray:
 combinations = getCombs()
 
 
-@jit(parallel=True)
+# @jit(parallel=True)
 def calcMeans(combs):
     means: np.ndarray = np.empty(len(combs), dtype=np.float64)
 
     for i, comb in enumerate(combs):
-        means[i] = np.float64(sp.Rational(sp.Integer(sum(comb)), sp.Integer(5)) * sp.Rational(4, 5))
+        means[i] = np.float64((sum(comb) / 5) * (4 / 5))
         if i % 1_000_000 == 0:
             print(comb)
 

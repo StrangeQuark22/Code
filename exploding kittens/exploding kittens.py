@@ -1,4 +1,3 @@
-from numba import njit, jit
 import random
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,12 +13,13 @@ def do(amount: int):
     cardsInDeck: int = len(initialIsBoom)
     for _ in range(amount):
         tempIsBoom: list[bool] = [False] * (cards - (players * 5)) + [True] * initialExplosion
-        isBoom = np.empty(shape=len(initialIsBoom))
-        for i in range(len(isBoom)):
-            isBoom[i] = tempIsBoom.pop(random.randint(0,len(tempIsBoom)-1))
+        random.shuffle(tempIsBoom)
+        # isBoom = np.empty(shape=len(initialIsBoom))
+        # for i in range(len(isBoom)):
+        #     isBoom[i] = tempIsBoom.pop(random.randint(0,len(tempIsBoom)-1))
         explosions: int = 4
         chances: list[float] = [explosions / cardsInDeck]
-        for i, draw in enumerate(isBoom, start=1):
+        for i, draw in enumerate(tempIsBoom, start=1):
             if draw:
                 explosions -= 1
             
@@ -35,6 +35,6 @@ def do(amount: int):
         sys.stdout.write(f"\rNumber {amount} done")
         sys.stdout.flush()
 
-do(10_000)
+do(1_000_000)
 plt.show()
 # print(chances)
