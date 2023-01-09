@@ -30,6 +30,7 @@ class App(tk.Tk):
         self.style.configure("Header.TFrame", background="#66e64c")
         self.style.configure("BorderedHeader.TFrame", background="#66e64c", borderwidth=4, relief="groove")
         self.style.configure("Header.TLabel", background="#66e64c")
+        self.style.configure("AccountInfo.TFrame", borderwidth=4, relief="groove")
 
         # Main notebook
         self.main_note = MainNotebook(self)
@@ -71,15 +72,27 @@ class AccountFrame(ttk.Frame):
     def __init__(self, container) -> None:
         super().__init__(container)
         # Initial setup
-        self.columnconfigure(0, weight=1)
+        self.columnconfigure(0, weight=3)
+        self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
 
         self.header = AccountFrame.Header(self)
-        self.header.grid(row=0, column=0, sticky="nsew")
+        self.header.grid(row=0, column=0, columnspan=2,sticky="nsew")
 
-        self.test_label = ttk.Label(self, text="test")
-        self.test_label.grid(row=2, column=0)
-        self.rowconfigure(2, weight=10)
+        self.account_info_frame = AccountFrame.AccountInfoFrame(self)
+        self.account_info_frame.grid(row=1, column=0, sticky="nsew")
+        self.rowconfigure(1, weight=5)
+
+        self.buttons_frame = AccountFrame.AccountButtonsFrame(self)
+        self.buttons_frame.grid(row=2, column=0, sticky="nsew")
+        self.rowconfigure(2, weight=5)
+
+        self.history_frame = AccountFrame.HistoryFrame(self)
+        self.history_frame.grid(row=1, rowspan=2, column=1, sticky="nsew")
+
+        # self.test_label = ttk.Label(self, text="test")
+        # self.test_label.grid(row=2, column=0)
+        # self.rowconfigure(2, weight=10)
 
     class Header(ttk.Frame):
         """Header for account screen"""
@@ -117,17 +130,110 @@ class AccountFrame(ttk.Frame):
 
             for logo_part in (self.logo_image_label, self.logo_text_label):
                 logo_part.grid_configure(padx=10)
-    
+
     class AccountInfoFrame(ttk.Frame):
         """Frame for holding account info like acc num, balance and max credit"""
 
         def __init__(self, container) -> None:
-            super().__init__(container)
+            super().__init__(container, style="AccountInfo.TFrame")
+            # Initial setup
+            self.columnconfigure(0, weight=1)
+            self.columnconfigure(1, weight=5)
 
-            
+            # [ACCOUNT NUM SECTION]
+            self.rowconfigure(0, weight=1)
+            # Account num image and label
+            self.account_number_icon = tk.PhotoImage(file="icons/hashtag25.png")
+            self.account_number_icon_label = ttk.Label(self, image=self.account_number_icon)
+            self.account_number_icon_label.image = self.account_number_icon  # type: ignore
+            self.account_number_icon_label.grid(row=0, column=0, sticky="e")
 
+            # Account num text and label
+            self.account_number: str = "123456"
+            self.account_number_text = tk.StringVar(value=f"Kontonummer: {self.account_number}")
+            self.account_number_text_label = ttk.Label(self, textvariable=self.account_number_text, font=("Roboto", 16))
+            self.account_number_text_label.grid(row=0, column=1, sticky="w")
 
+            # [ACCOUNT BALANCE SECTION]
+            self.rowconfigure(1, weight=1)
+            # Account balance icon
+            self.balance_icon = tk.PhotoImage(file="icons/wallet25.png")
+            self.balance_icon_label = ttk.Label(self, image=self.balance_icon)
+            self.balance_icon_label.image = self.balance_icon  # type: ignore
+            self.balance_icon_label.grid(row=1, column=0, sticky="e")
 
+            # Account balance text and label
+            self.balance: str = "10000"
+            self.balance_text = tk.StringVar(value=f"Saldo: {self.balance}")
+            self.balance_text_label = ttk.Label(self, textvariable=self.balance_text, font=("Roboto", 16))
+            self.balance_text_label.grid(row=1, column=1, sticky="w")
+
+            # [ACCOUNT CREDIT SECTION]
+            self.rowconfigure(2, weight=1)
+            # Credit icon and label
+            self.credit_icon = tk.PhotoImage(file="icons/credit_card25.png")
+            self.credit_icon_label = ttk.Label(self, image=self.credit_icon)
+            self.credit_icon_label.image = self.credit_icon  # type: ignore
+            self.credit_icon_label.grid(row=2, column=0, sticky="e")
+
+            # Credit text and label
+            self.max_credit: str = "5000"
+            self.credit_text = tk.StringVar(value=f"Maximal kredit: {self.max_credit}")
+            self.credit_text_label = ttk.Label(self, textvariable=self.credit_text, font=("Roboto", 16))
+            self.credit_text_label.grid(row=2, column=1, sticky="w")
+
+            for child in self.winfo_children():
+                child.grid_configure(padx=5, pady=5)
+
+    class AccountButtonsFrame(ttk.Frame):
+        """Frame for all buttons in account info pane"""
+
+        def __init__(self, container) -> None:
+            super().__init__(container, style="AccountInfo.TFrame")
+
+            # Initial config
+            self.columnconfigure(0, weight=1)
+            self.columnconfigure(1, weight=1)
+            self.columnconfigure(2, weight=1)
+            self.rowconfigure(0, weight=1)
+            self.rowconfigure(1, weight=1)
+            self.rowconfigure(2, weight=1)
+
+            # Add money button
+            self.add_money_button = ttk.Button(self, text="Sätt in pengar")
+            self.add_money_button.grid(row=0, column=0, rowspan=2, sticky="nsew")
+
+            # Withdraw money button
+            self.withdraw_money_button = ttk.Button(self, text="Ta ut pengar")
+            self.withdraw_money_button.grid(row=2, column=0, sticky="nsew")
+
+            # Change max credit button
+            self.change_credit_button = ttk.Button(self, text="Ändra max. kredit")
+            self.change_credit_button.grid(row=0, column=1, sticky="nsew")
+
+            # Change name button
+            self.change_name_button = ttk.Button(self, text="Ändra namn")
+            self.change_name_button.grid(row=1, column=1, sticky="nsew")
+
+            # Change pass button
+            self.change_pass_button = ttk.Button(self, text="Ändra lösenord")
+            self.change_pass_button.grid(row=2, column=1, sticky="nsew")
+
+            # Log out button
+            self.logout_button = ttk.Button(self, text="Logga ut")
+            self.logout_button.grid(row=0, column=2, rowspan=3, sticky="nsew")
+
+            for child in self.winfo_children():
+                child.grid_configure(padx=5, pady=5)
+
+    class HistoryFrame(ttk.Frame):
+        """Frame for account transaction history"""
+
+        def __init__(self, container):
+            super().__init__(container, style="AccountInfo.TFrame")
+
+            self.placeholder = ttk.Label(self, text="Historik (WIP)")
+            self.placeholder.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
 
 class InfoFrame(ttk.Frame):
