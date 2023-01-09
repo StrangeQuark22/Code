@@ -4,6 +4,7 @@ import json
 from passlib.hash import argon2
 from typing import Optional, TypedDict
 
+
 class BankAccount:
     """
     A class that is essentially a datatype for bank account objects.
@@ -14,8 +15,8 @@ class BankAccount:
         data: dict --- All data of the account as a dict. The keys are the individual attributes
         balance: float --- The available money on the account
         number: int --- a 6 digit unique numerical identifier for the account
-        holderName: str --- The name of the account holder
-        maxCredit: int --- Maximum allowed credit on the account
+        holder_name: str --- The name of the account holder
+        max_credit: int --- Maximum allowed credit on the account
         password: str --- The account password, stored as cleartext for now
 
     Methods:
@@ -31,50 +32,50 @@ class BankAccount:
     class AccountData(TypedDict, total=False):
         """TypedDict for account data storage"""
         balance: float
-        holderName: str
+        holder_name: str
         number: int
-        maxCredit: int
-        hashedPassword: str
+        max_credit: int
+        hashed_password: str
 
     # Constructor, skapar ett nytt konto med känd data. Används för filimport
-    def __init__(self, holderName: str, hashedPassword: str, balance: float=0, maxCredit: int=5000, number: Optional[int]=None):
+    def __init__(self, holder_name: str, hashed_password: str, balance: float = 0, max_credit: int = 5000, number: Optional[int] = None):
         self.data: BankAccount.AccountData = {
             "balance": balance,
-            "holderName": holderName,
-            "number": Bank.getAccountNumber() if number == None else number,
-            "maxCredit": maxCredit,
-            "hashedPassword": hashedPassword
+            "holder_name": holder_name,
+            "number": Bank.get_account_number() if number is None else number,
+            "max_credit": max_credit,
+            "hashed_password": hashed_password
         }
         self.balance: float = self.data["balance"]
         self.number: int = self.data["number"]
-        self.holderName: str = self.data["holderName"]
-        self.maxCredit: int = self.data["maxCredit"]
-        self.password: str = self.data["hashedPassword"]
-        
-        Bank.addAccount(self)
+        self.holder_name: str = self.data["holder_name"]
+        self.max_credit: int = self.data["max_credit"]
+        self.password: str = self.data["hashed_password"]
+
+        Bank.add_account(self)
 
     def update(self, update: AccountData) -> None:
         """Updates account data py parsing an AccountData dict into the appropriate attributes"""
         self.data.update(update)
-        ogNum: int = self.number
-        
+        og_name: str = self.holder_name
+
         if "balance" in update and "balance" in self.data:
             self.balance = self.data["balance"]
-        
+
         if "number" in update and "number" in self.data:
             self.number = self.data["number"]
-        
-        if "holderName" in update and "holderName" in self.data:
-            self.holderName = self.data["holderName"]
-        
-        if "maxCredit" in update and "maxCredit" in self.data:
-            self.maxCredit = self.data["maxCredit"]
-        
-        if "hashedPassword" in update and "hashedPassword" in self.data:
-            self.password = self.data["hashedPassword"]
+
+        if "holder_name" in update and "holder_name" in self.data:
+            self.holder_name = self.data["holder_name"]
+
+        if "max_credit" in update and "max_credit" in self.data:
+            self.max_credit = self.data["max_credit"]
+
+        if "hashed_password" in update and "hashed_password" in self.data:
+            self.password = self.data["hashed_password"]
 
         try:
-            Bank.updateAccount(self, ogNum)
+            Bank.update_account(self, og_name)
         except ValueError:
             # TODO:
             # Add handling of improper account number selection
@@ -94,13 +95,13 @@ class Bank:
         accounts: dict[int, BankAccount] --- A dict of the accounts keyed by ther account number
     
     Methods:
-        getAccountNumber(cls) -> int:
+        get_account_number(cls) -> int:
             returns a unique 6-digit account number that doesn't exist yet.
         
-        addAccount(cls, account: BankAccount) -> None:
+        add_account(cls, account: BankAccount) -> None:
             Adds an account to the 'accounts' dict
 
-        updateAccounts(cls, updatedAccount: BankAccount, originalAccountNum: int) -> None:
+        update_account(cls, updated_account: BankAccount, original_account_num: int) -> None:
             overwrites the account with the number originalAccountNum with the data in updatedAccount
 
         save(cls, path: str) -> None:
@@ -109,25 +110,28 @@ class Bank:
         load(cls, path: str) -> None:
             Loads serialized accounts from json att path
     """
-    
+
     BANK_NAME: str = "Banken"
-    accounts: dict[int, BankAccount] = {}
+    accounts: dict[str, BankAccount] = {}
 
     @classmethod
-    def getAccountNumber(cls) -> int:
+    def get_account_number(cls) -> int:
         """Returns a 6-digit unique integer account number that doesn't exist yet"""
-        num: int = random.randint(100000,999999)
-        while num in cls.accounts:
-            num = random.randint(100000,999999)
+        num: int = random.randint(100000, 999999)
+        while num in [acc.number for _, acc in cls.accounts.items()]:
+            num = random.randint(100000, 999999)
         return num
-    
-    @classmethod
-    def addAccount(cls, account: BankAccount) -> None:      
-        """Adds an account to the class attribute storing all accounts"""
-        cls.accounts.update({account.number: account})
 
     @classmethod
-    def updateAccount(cls, updatedAccount: BankAccount, originalAccountNum: int) -> None:
+    def add_account(cls, account: BankAccount) -> None:
+        """Adds an account to the class attribute storing all accounts. Raises ValueError of name already exists"""
+        if account.holder_name not in [acc.number for _, acc in cls.accounts.items()]:
+            cls.accounts.update({account.holder_name: account})
+        else:
+            raise ValueError("Name already exists, choose another one")
+
+    @classmethod
+    def update_account(cls, updated_account: BankAccount, og_holder_name: str) -> None:
         """
         Updates the 'accounts' attribute at index originalAccountNum with the updatedAccount object
         
@@ -140,25 +144,24 @@ class Bank:
         Since exceptions stop excecution a try-except block is recommended with this method to preserve accounts in RAM
         """
 
-        if updatedAccount.number not in cls.accounts:
+        if updated_account.holder_name not in [acc.number for _, acc in cls.accounts.items()]:
             try:
-                cls.accounts.pop(originalAccountNum)
-            except KeyError:
-                raise KeyError("Original account number does not exist in the ledger of accounts")
+                cls.accounts.pop(og_holder_name)
+            except KeyError as exc:
+                raise KeyError("Original account number does not exist in the ledger of accounts") from exc
             else:
-                cls.accounts.update({updatedAccount.number: updatedAccount})
+                cls.accounts.update({updated_account.holder_name: updated_account})
         else:
-            raise ValueError("Newly defined account number already exists, insertion impossible")
+            raise ValueError("Newly defined account name already exists, insertion impossible")
 
     @classmethod
     def save(cls, path: str) -> None:
         """Serialise accounts to json and save at path"""
-        with open(path, "w") as file:
+        with open(path, "w", encoding="utf-8") as file:
             json.dump({key: val.data for key, val in cls.accounts.items()}, file)
-    
+
     @classmethod
     def load(cls, path: str) -> None:
         """Load serialized accounts from json at path"""
-        with open(path, "r") as file:
-            cls.accounts = {int(key): BankAccount(**val) for key, val in dict(json.load(file)).items()}
-        
+        with open(path, "r", encoding="utf-8") as file:
+            cls.accounts = {str(key): BankAccount(**val) for key, val in dict(json.load(file)).items()}

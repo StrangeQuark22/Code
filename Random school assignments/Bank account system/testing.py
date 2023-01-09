@@ -1,16 +1,19 @@
-from banksystem import BankAccount, Bank
-from passlib.hash import argon2
+import tkinter as tk
+from tkinter import ttk
+import os
 
-Bank.load("test.json")
+os.chdir("D:/MISC/Code/Random school assignments/Bank account system")
 
-acc = Bank.accounts[499040]
+root = tk.Tk()
 
-print(acc.data)
-print(acc.number)
+style = ttk.Style()
+style.configure("Tabless.TNotebook", tabmargins=[0, 0, 0, 0])
+style.layout("Tabless.TNotebook.Tab", [])
 
-acc.update({"number": 255355})
-
-print(acc.data)
-print(acc.number)
-print(Bank.accounts[acc.number].data)
-print(Bank.accounts[acc.number].number)
+note = ttk.Notebook(root, style="Tabless.TNotebook")
+note.grid(row=0, column=0)
+root.rowconfigure(0, weight=1)
+root.columnconfigure(0, weight=1)
+label = ttk.Label(note, text="test")
+note.add(label)
+root.mainloop()
