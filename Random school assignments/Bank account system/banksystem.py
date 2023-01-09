@@ -50,7 +50,7 @@ class BankAccount:
         self.number: int = self.data["number"]
         self.holder_name: str = self.data["holder_name"]
         self.max_credit: int = self.data["max_credit"]
-        self.password: str = self.data["hashed_password"]
+        self.hashed_password: str = self.data["hashed_password"]
 
         Bank.add_account(self)
 
@@ -72,7 +72,7 @@ class BankAccount:
             self.max_credit = self.data["max_credit"]
 
         if "hashed_password" in update and "hashed_password" in self.data:
-            self.password = self.data["hashed_password"]
+            self.hashed_password = self.data["hashed_password"]
 
         try:
             Bank.update_account(self, og_name)

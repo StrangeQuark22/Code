@@ -1,1 +1,9 @@
-{}
+{
+    "Marcell": {
+        "balance": 5000,
+        "holder_name": "Marcell",
+        "number": 234567,
+        "max_credit": 5000,
+        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$L+W81xrjHGNMCYGQEuJcaw$2BMu12G19VEL8C07UJUNY68SUIuKxfTlY8tnvGa6MQY"
+    }
+}

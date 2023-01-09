@@ -20,7 +20,6 @@ class App(tk.Tk):
         # Inital setup
         self.title(Bank.BANK_NAME)
         self.geometry("400x450")
-        self.resizable(False, False)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         self.font = tkfont.Font(family="Roboto")
@@ -28,6 +27,9 @@ class App(tk.Tk):
         # Style setup
         self.style = ttk.Style(self)
         self.style.layout("Tabless.TNotebook.Tab", [])
+        self.style.configure("Header.TFrame", background="#66e64c")
+        self.style.configure("BorderedHeader.TFrame", background="#66e64c", borderwidth=4, relief="groove")
+        self.style.configure("Header.TLabel", background="#66e64c")
 
         # Main notebook
         self.main_note = MainNotebook(self)
@@ -36,6 +38,8 @@ class App(tk.Tk):
         # Creates info splashscreen
         self.info_frame = InfoFrame(self)
         self.main_note.add(self.info_frame)
+        self.info_frame.login_button.focus()
+        self.info_frame.bind("<FocusIn>", lambda e: self.info_frame.login_button.focus())
 
         # Creates account screen
         self.account_frame = AccountFrame(self)
@@ -48,6 +52,8 @@ class App(tk.Tk):
     def login(self) -> None:
         """What to do when login is successful"""
         self.switch_to(1)
+        self.geometry("800x450")
+
 
 class MainNotebook(ttk.Notebook):
     """The main views of the app"""
@@ -68,9 +74,60 @@ class AccountFrame(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # Test label
-        test = ttk.Label(self, text="test")
-        test.grid(row=0, column=0)
+        self.header = AccountFrame.Header(self)
+        self.header.grid(row=0, column=0, sticky="nsew")
+
+        self.test_label = ttk.Label(self, text="test")
+        self.test_label.grid(row=2, column=0)
+        self.rowconfigure(2, weight=10)
+
+    class Header(ttk.Frame):
+        """Header for account screen"""
+
+        def __init__(self, container) -> None:
+            super().__init__(container, style="BorderedHeader.TFrame")
+
+            # Welcome text
+            self.name: str = "Name"
+            self.header_text = tk.StringVar(value=f"Välkommen {self.name}!")
+            self.welcome_text = ttk.Label(self, textvariable=self.header_text, font=("Roboto", 20), style="Header.TLabel")
+            self.welcome_text.grid(row=0, column=0, sticky="w", padx=5)
+            self.rowconfigure(0, weight=1)
+            self.columnconfigure(0, weight=3)
+
+            # Bank watermark
+            # Logo var
+            self.logo = tk.PhotoImage(file="icons/bank50.png")
+            # Frame for logo and text
+            self.logo_frame = ttk.Frame(self, style="Header.TFrame")
+            self.logo_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=5)
+            self.columnconfigure(1, weight=1)
+
+            # Image part of logo label
+            self.logo_image_label = ttk.Label(self.logo_frame, image=self.logo, style="Header.TLabel")
+            self.logo_image_label.image = self.logo  # type: ignore
+            self.logo_image_label.grid(row=0, column=0, sticky="e")
+            self.logo_frame.rowconfigure(0, weight=1)
+            self.logo_frame.columnconfigure(0, weight=5)
+
+            # Text part of logo label
+            self.logo_text_label = ttk.Label(self.logo_frame, text=Bank.BANK_NAME, font=("Roboto", 20, "bold"), style="Header.TLabel")
+            self.logo_text_label.grid(row=0, column=1, sticky="w")
+            self.logo_frame.columnconfigure(1, weight=1)
+
+            for logo_part in (self.logo_image_label, self.logo_text_label):
+                logo_part.grid_configure(padx=10)
+    
+    class AccountInfoFrame(ttk.Frame):
+        """Frame for holding account info like acc num, balance and max credit"""
+
+        def __init__(self, container) -> None:
+            super().__init__(container)
+
+            
+
+
+
 
 
 class InfoFrame(ttk.Frame):
@@ -97,11 +154,13 @@ class InfoFrame(ttk.Frame):
         self.login_button = ttk.Button(self, text="Logga in", command=self.open_login_prompt)
         self.login_button.grid(row=2, column=0, sticky="ew")
         self.rowconfigure(2, weight=2)
+        self.login_button.bind("<Return>", lambda e: self.login_button.invoke())
 
         # Create account button
         self.signup_button = ttk.Button(self, text="Öppna konto")
         self.signup_button.grid(row=3, column=0, sticky="ew")
         self.rowconfigure(3, weight=2)
+        self.signup_button.bind("<Return>", lambda e: print("test"))
 
         # Quit button
         self.quit_button = ttk.Button(self, text="Lämna banken", command=self.winfo_toplevel().quit)
@@ -154,8 +213,9 @@ class LoginWindow(tk.Toplevel):
             # Username entry and StringVar
             self.username = tk.StringVar()
             self.username_entry = ttk.Entry(self, textvariable=self.username)
-            self.username_entry.grid(row=2, column=0, columnspan=2)
+            self.username_entry.grid(row=2, column=0, columnspan=2, sticky="ew")
             self.rowconfigure(2, weight=1)
+            self.username_entry.focus()
 
             # Password entry text
             self.password_label = ttk.Label(self, text="Lösenord:")
@@ -165,7 +225,7 @@ class LoginWindow(tk.Toplevel):
             # Password entry and StringVar
             self.password = tk.StringVar()
             self.password_entry = ttk.Entry(self, textvariable=self.password, show="*")
-            self.password_entry.grid(row=4, column=0, columnspan=2)
+            self.password_entry.grid(row=4, column=0, columnspan=2, sticky="ew")
             self.rowconfigure(4, weight=1)
 
             # Login button
@@ -183,11 +243,25 @@ class LoginWindow(tk.Toplevel):
 
         def login(self, username: str, password: str) -> None:
             """The function of the login button. It stores login data and flips pages in main app and quits popup"""
-            msgbox.showinfo("Nice", f"login: user: {username} pass: {password}")
-            self.winfo_toplevel().master.login() # type: ignore
+            # msgbox.showinfo("Nice", f"login: user: {username} pass: {password}")
+            try:
+                acc = Bank.accounts[username.title()]
+            except KeyError:
+                msgbox.showerror("Fel", "Ogiltigt användarnamn")
+                return
+
+            if argon2.verify(password, acc.hashed_password):
+                self.password.set("")
+                msgbox.showinfo("Login succes!", str(acc.data))
+            else:
+                msgbox.showerror("Fel", "Felaktigt lösenord")
+                return
+
+            self.winfo_toplevel().master.login()  # type: ignore
             self.winfo_toplevel().destroy()
 
 
 if __name__ == "__main__":
     app = App()
+    Bank.load("test.json")
     app.mainloop()
