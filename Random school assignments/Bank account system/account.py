@@ -2,6 +2,9 @@ import random
 import warnings
 import sys
 import json
+import os
+
+os.chdir("Random school assignments/Bank account system")
 
 
 class BankAccount:
@@ -213,11 +216,11 @@ def parseFile(path: str):
 
 # Main metod
 if __name__ == "__main__":
-    importData = parseFile("accounts.json")
-    if type(importData) is list:
-        for account in importData:
-            Bank.addAccount(BankAccount(account))
-    else:
-        Bank.addAccount(importData)
+    # importData = parseFile("accounts.json")
+    # if type(importData) is list:
+    #     for account in importData:
+    #         Bank.addAccount(BankAccount(account))
+    # else:
+    #     Bank.addAccount(importData)
 
     Menu.getMainMenu()

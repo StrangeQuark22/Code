@@ -78,11 +78,11 @@ class BankAccount:
             Bank.update_account(self, og_name)
         except ValueError:
             # TODO:
-            # Add handling of improper account number selection
+            # Add handling of improper account name selection
             pass
         except KeyError:
             # TODO:
-            # Add handling of ogNum doesn't exist
+            # Add handling of og_name doesn't exist
             pass
 
 
