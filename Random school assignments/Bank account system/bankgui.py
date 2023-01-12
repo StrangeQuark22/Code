@@ -1,11 +1,15 @@
 """GUI implementation of the bank system from school using my banksystem.py as backend"""
 import os
+import sys
+import string
 import tkinter as tk
 import tkinter.font as tkfont
 import tkinter.messagebox as msgbox
+import tkinter.filedialog as filedlg
 from tkinter import ttk
 from banksystem import Bank, BankAccount
 from passlib.hash import argon2
+from typing import NoReturn
 
 os.chdir("Random school assignments/Bank account system")
 
@@ -27,7 +31,12 @@ class App(tk.Tk):
         self.style = ttk.Style(self)
         self.style.layout("Tabless.TNotebook.Tab", [])
         self.style.configure("Header.TFrame", background="#66e64c")
-        self.style.configure("BorderedHeader.TFrame", background="#66e64c", borderwidth=4, relief="groove")
+        self.style.configure(
+            "BorderedHeader.TFrame",
+            background="#66e64c",
+            borderwidth=4,
+            relief="groove",
+        )
         self.style.configure("Header.TLabel", background="#66e64c")
         self.style.configure("AccountInfo.TFrame", borderwidth=4, relief="groove")
 
@@ -39,11 +48,16 @@ class App(tk.Tk):
         self.info_frame = InfoFrame(self)
         self.main_note.add(self.info_frame)
         self.info_frame.login_button.focus()
-        self.info_frame.bind("<FocusIn>", lambda e: self.info_frame.login_button.focus())
+        self.info_frame.bind(
+            "<FocusIn>", lambda e: self.info_frame.login_button.focus()
+        )
 
         # Creates account screen
         self.account_frame = AccountFrame(self)
         self.main_note.add(self.account_frame)
+
+        # Window close protocol
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def switch_to(self, tab: int) -> None:
         """Switch to tab of main notebook"""
@@ -53,6 +67,22 @@ class App(tk.Tk):
         """What to do when login is successful"""
         self.switch_to(1)
         self.geometry("800x450")
+
+    def on_close(self) -> None | NoReturn:
+        """Proper closing procedure"""
+        answer: bool | None = msgbox.askyesnocancel(
+            "Lämna", "Vill du spara konton till en fil innan du lämnar?"
+        )
+
+        if answer is None:
+            return
+
+        if answer:
+            save_path = filedlg.asksaveasfilename(filetypes=[("JSON Files", ".json")])
+            Bank.save(save_path)
+
+        self.quit()
+        sys.exit()
 
 
 class MainNotebook(ttk.Notebook):
@@ -100,7 +130,12 @@ class AccountFrame(ttk.Frame):
             # Welcome text
             self.name: str = "Name"
             self.header_text = tk.StringVar(value=f"Välkommen {self.name}!")
-            self.welcome_text = ttk.Label(self, textvariable=self.header_text, font=("Roboto", 20), style="Header.TLabel")
+            self.welcome_text = ttk.Label(
+                self,
+                textvariable=self.header_text,
+                font=("Roboto", 20),
+                style="Header.TLabel",
+            )
             self.welcome_text.grid(row=0, column=0, sticky="w", padx=5)
             self.rowconfigure(0, weight=1)
             self.columnconfigure(0, weight=3)
@@ -114,14 +149,21 @@ class AccountFrame(ttk.Frame):
             self.columnconfigure(1, weight=1)
 
             # Image part of logo label
-            self.logo_image_label = ttk.Label(self.logo_frame, image=self.logo, style="Header.TLabel")
+            self.logo_image_label = ttk.Label(
+                self.logo_frame, image=self.logo, style="Header.TLabel"
+            )
             self.logo_image_label.image = self.logo  # type: ignore
             self.logo_image_label.grid(row=0, column=0, sticky="e")
             self.logo_frame.rowconfigure(0, weight=1)
             self.logo_frame.columnconfigure(0, weight=5)
 
             # Text part of logo label
-            self.logo_text_label = ttk.Label(self.logo_frame, text=Bank.BANK_NAME, font=("Roboto", 20, "bold"), style="Header.TLabel")
+            self.logo_text_label = ttk.Label(
+                self.logo_frame,
+                text=Bank.BANK_NAME,
+                font=("Roboto", 20, "bold"),
+                style="Header.TLabel",
+            )
             self.logo_text_label.grid(row=0, column=1, sticky="w")
             self.logo_frame.columnconfigure(1, weight=1)
 
@@ -134,21 +176,31 @@ class AccountFrame(ttk.Frame):
         def __init__(self, container) -> None:
             super().__init__(container, style="AccountInfo.TFrame")
             # Initial setup
-            self.columnconfigure(0, weight=1)
-            self.columnconfigure(1, weight=5)
+            # self.columnconfigure(0, weight=1)
+            # self.columnconfigure(1, weight=1)
 
             # [ACCOUNT NUM SECTION]
             self.rowconfigure(0, weight=1)
             # Account num image and label
             self.account_number_icon = tk.PhotoImage(file="icons/hashtag25.png")
-            self.account_number_icon_label = ttk.Label(self, image=self.account_number_icon)
+            self.account_number_icon_label = ttk.Label(
+                self, image=self.account_number_icon
+            )
             self.account_number_icon_label.image = self.account_number_icon  # type: ignore
-            self.account_number_icon_label.grid(row=0, column=0, sticky="e")
+            self.account_number_icon_label.grid(row=0, column=0)
 
             # Account num text and label
             self.account_number: str = "123456"
-            self.account_number_text = tk.StringVar(value=f"Kontonummer: {self.account_number}")
-            self.account_number_text_label = ttk.Label(self, textvariable=self.account_number_text, font=("Roboto", 16))
+            self.account_number_text = tk.StringVar(
+                value=f"Kontonummer: {self.account_number}"
+            )
+            self.account_number_text_label = ttk.Label(
+                self,
+                textvariable=self.account_number_text,
+                font=("Roboto", 16),
+                justify="left",
+                anchor="w",
+            )
             self.account_number_text_label.grid(row=0, column=1, sticky="w")
 
             # [ACCOUNT BALANCE SECTION]
@@ -157,12 +209,18 @@ class AccountFrame(ttk.Frame):
             self.balance_icon = tk.PhotoImage(file="icons/wallet25.png")
             self.balance_icon_label = ttk.Label(self, image=self.balance_icon)
             self.balance_icon_label.image = self.balance_icon  # type: ignore
-            self.balance_icon_label.grid(row=1, column=0, sticky="e")
+            self.balance_icon_label.grid(row=1, column=0)
 
             # Account balance text and label
             self.balance: str = "10000"
             self.balance_text = tk.StringVar(value=f"Saldo: {self.balance}")
-            self.balance_text_label = ttk.Label(self, textvariable=self.balance_text, font=("Roboto", 16))
+            self.balance_text_label = ttk.Label(
+                self,
+                textvariable=self.balance_text,
+                font=("Roboto", 16),
+                justify="left",
+                anchor="w",
+            )
             self.balance_text_label.grid(row=1, column=1, sticky="w")
 
             # [ACCOUNT CREDIT SECTION]
@@ -171,12 +229,18 @@ class AccountFrame(ttk.Frame):
             self.credit_icon = tk.PhotoImage(file="icons/credit_card25.png")
             self.credit_icon_label = ttk.Label(self, image=self.credit_icon)
             self.credit_icon_label.image = self.credit_icon  # type: ignore
-            self.credit_icon_label.grid(row=2, column=0, sticky="e")
+            self.credit_icon_label.grid(row=2, column=0)
 
             # Credit text and label
             self.max_credit: str = "5000"
             self.credit_text = tk.StringVar(value=f"Maximal kredit: {self.max_credit}")
-            self.credit_text_label = ttk.Label(self, textvariable=self.credit_text, font=("Roboto", 16))
+            self.credit_text_label = ttk.Label(
+                self,
+                textvariable=self.credit_text,
+                font=("Roboto", 16),
+                justify="left",
+                anchor="w",
+            )
             self.credit_text_label.grid(row=2, column=1, sticky="w")
 
             for child in self.winfo_children():
@@ -197,19 +261,27 @@ class AccountFrame(ttk.Frame):
             self.rowconfigure(2, weight=1)
 
             # Add money button
-            self.add_money_button = ttk.Button(self, text="Sätt in pengar", command=self.make_add_money_window)
+            self.add_money_button = ttk.Button(
+                self, text="Sätt in pengar", command=self.make_add_money_window
+            )
             self.add_money_button.grid(row=0, column=0, rowspan=2, sticky="nsew")
 
             # Withdraw money button
-            self.withdraw_money_button = ttk.Button(self, text="Ta ut pengar", command=self.make_withdraw_money_window)
+            self.withdraw_money_button = ttk.Button(
+                self, text="Ta ut pengar", command=self.make_withdraw_money_window
+            )
             self.withdraw_money_button.grid(row=2, column=0, sticky="nsew")
 
             # Change max credit button
-            self.change_credit_button = ttk.Button(self, text="Ändra max. kredit")
+            self.change_credit_button = ttk.Button(
+                self, text="Ändra max. kredit", command=self.make_change_credit_window
+            )
             self.change_credit_button.grid(row=0, column=1, sticky="nsew")
 
             # Change name button
-            self.change_name_button = ttk.Button(self, text="Ändra namn")
+            self.change_name_button = ttk.Button(
+                self, text="Ändra namn", command=self.make_change_name_window
+            )
             self.change_name_button.grid(row=1, column=1, sticky="nsew")
 
             # Change pass button
@@ -217,7 +289,7 @@ class AccountFrame(ttk.Frame):
             self.change_pass_button.grid(row=2, column=1, sticky="nsew")
 
             # Log out button
-            self.logout_button = ttk.Button(self, text="Logga ut")
+            self.logout_button = ttk.Button(self, text="Logga ut", command=self.logout)
             self.logout_button.grid(row=0, column=2, rowspan=3, sticky="nsew")
 
             for child in self.winfo_children():
@@ -239,7 +311,9 @@ class AccountFrame(ttk.Frame):
                 self.main_frame.columnconfigure(0, weight=1)
 
                 # Add money text
-                self.add_money_label = ttk.Label(self.main_frame, text="Sätt in pengar", font=("Roboto", 24))
+                self.add_money_label = ttk.Label(
+                    self.main_frame, text="Sätt in pengar", font=("Roboto", 24)
+                )
                 self.add_money_label.grid(row=0, column=0, padx=5, pady=10)
                 self.main_frame.rowconfigure(0, weight=3)
 
@@ -261,12 +335,18 @@ class AccountFrame(ttk.Frame):
                 self.button_frame.rowconfigure(0, weight=1)
 
                 # Confirm button
-                self.confirm_button = ttk.Button(self.button_frame, text="Sätt in", command=self.confirm)
+                self.confirm_button = ttk.Button(
+                    self.button_frame, text="Sätt in", command=self.confirm
+                )
                 self.confirm_button.grid(row=0, column=1)
                 self.button_frame.columnconfigure(1, weight=1)
 
                 # Cancel button
-                self.cancel_button = ttk.Button(self.button_frame, text="Tillbaka", command=self.winfo_toplevel().destroy)
+                self.cancel_button = ttk.Button(
+                    self.button_frame,
+                    text="Tillbaka",
+                    command=self.winfo_toplevel().destroy,
+                )
                 self.cancel_button.grid(row=0, column=0)
                 self.button_frame.columnconfigure(0, weight=1)
 
@@ -280,13 +360,22 @@ class AccountFrame(ttk.Frame):
                     msgbox.showerror("Fel", "Summa ej ett flyttal")
                     return
 
-                if float(self.amount.get()) > 0:
-                    account.update({"balance": account.balance + amount})
-                    self.winfo_toplevel().master.master.load_account(account)  # type: ignore
-                    self.winfo_toplevel().destroy()
-                else:
-                    msgbox.showerror("Fel", "Ogiltigt summa (antagligen negativ eller 0)")
+                if float(self.amount.get()) < 0:
+                    msgbox.showerror(
+                        "Fel", "Ogiltigt summa (antagligen negativ eller 0)"
+                    )
                     return
+
+                try:
+                    account.update({"balance": account.balance + amount})
+                except KeyError:
+                    msgbox.showerror(
+                        "Fel",
+                        "Kontot existerar inte i den globala databasen. Detta ska vara omöjligt så grattis, du har pajat min kod! (Det är antagligen Pythons GC som förstör, men ingen aning) Skapa om kontot om det ska användas igen.",  # NOQA
+                    )
+                    return
+                self.winfo_toplevel().master.master.load_account(account)  # type: ignore
+                self.winfo_toplevel().destroy()
 
         class WithdrawMoneyPrompt(tk.Toplevel):
             """Popup to withdraw money"""
@@ -304,7 +393,9 @@ class AccountFrame(ttk.Frame):
                 self.main_frame.columnconfigure(0, weight=1)
 
                 # withdraw money text
-                self.withdraw_money_label = ttk.Label(self.main_frame, text="Ta ut pengar", font=("Roboto", 24))
+                self.withdraw_money_label = ttk.Label(
+                    self.main_frame, text="Ta ut pengar", font=("Roboto", 24)
+                )
                 self.withdraw_money_label.grid(row=0, column=0, padx=5, pady=10)
                 self.main_frame.rowconfigure(0, weight=3)
 
@@ -326,12 +417,18 @@ class AccountFrame(ttk.Frame):
                 self.button_frame.rowconfigure(0, weight=1)
 
                 # Confirm button
-                self.confirm_button = ttk.Button(self.button_frame, text="Ta ut", command=self.confirm)
+                self.confirm_button = ttk.Button(
+                    self.button_frame, text="Ta ut", command=self.confirm
+                )
                 self.confirm_button.grid(row=0, column=1)
                 self.button_frame.columnconfigure(1, weight=1)
 
                 # Cancel button
-                self.cancel_button = ttk.Button(self.button_frame, text="Tillbaka", command=self.winfo_toplevel().destroy)
+                self.cancel_button = ttk.Button(
+                    self.button_frame,
+                    text="Tillbaka",
+                    command=self.winfo_toplevel().destroy,
+                )
                 self.cancel_button.grid(row=0, column=0)
                 self.button_frame.columnconfigure(0, weight=1)
 
@@ -346,13 +443,25 @@ class AccountFrame(ttk.Frame):
                     return
 
                 if amount <= 0:
-                    msgbox.showerror("Fel", "Ogiltig summa (antagligen negativ eller 0)")
+                    msgbox.showerror(
+                        "Fel", "Ogiltig summa (antagligen negativ eller 0)"
+                    )
                     return
                 if account.balance - amount < 0:
-                    msgbox.showerror("Otillräckligt saldo", f"Pengarna på ditt saldo räcker inte till.\nDu kan som mest ta ut {account.balance} kr")
+                    msgbox.showerror(
+                        "Otillräckligt saldo",
+                        f"Pengarna på ditt saldo räcker inte till.\nDu kan som mest ta ut {account.balance} kr",
+                    )
                     return
 
-                account.update({"balance": account.balance - amount})
+                try:
+                    account.update({"balance": account.balance - amount})
+                except KeyError:
+                    msgbox.showerror(
+                        "Fel",
+                        "Kontot existerar inte i den globala databasen. Detta ska vara omöjligt så grattis, du har pajat min kod! (Det är antagligen Pythons GC som förstör, men ingen aning) Skapa om kontot om det ska användas igen.",  # NOQA
+                    )
+                    return
                 self.winfo_toplevel().master.master.load_account(account)  # type: ignore
                 self.winfo_toplevel().destroy()
 
@@ -372,12 +481,17 @@ class AccountFrame(ttk.Frame):
                 self.main_frame.columnconfigure(0, weight=1)
 
                 # withdraw money text
-                self.withdraw_money_label = ttk.Label(self.main_frame, text="Ta ut pengar", font=("Roboto", 24))
-                self.withdraw_money_label.grid(row=0, column=0, padx=5, pady=10)
+                self.change_credit_label = ttk.Label(
+                    self.main_frame,
+                    text="Ändra\nmaximal kredit",
+                    font=("Roboto", 24),
+                    justify="center",
+                )
+                self.change_credit_label.grid(row=0, column=0, padx=5, pady=10)
                 self.main_frame.rowconfigure(0, weight=3)
 
                 # Amount entry and label:
-                self.entry_label = ttk.Label(self.main_frame, text="Mängd:")
+                self.entry_label = ttk.Label(self.main_frame, text="Ny mängd:")
                 self.entry_label.grid(row=1, column=0, sticky="w", padx=5)
                 self.main_frame.rowconfigure(1, weight=1)
                 self.amount = tk.StringVar()
@@ -394,12 +508,18 @@ class AccountFrame(ttk.Frame):
                 self.button_frame.rowconfigure(0, weight=1)
 
                 # Confirm button
-                self.confirm_button = ttk.Button(self.button_frame, text="Ta ut", command=self.confirm)
+                self.confirm_button = ttk.Button(
+                    self.button_frame, text="Ändra", command=self.confirm
+                )
                 self.confirm_button.grid(row=0, column=1)
                 self.button_frame.columnconfigure(1, weight=1)
 
                 # Cancel button
-                self.cancel_button = ttk.Button(self.button_frame, text="Tillbaka", command=self.winfo_toplevel().destroy)
+                self.cancel_button = ttk.Button(
+                    self.button_frame,
+                    text="Tillbaka",
+                    command=self.winfo_toplevel().destroy,
+                )
                 self.cancel_button.grid(row=0, column=0)
                 self.button_frame.columnconfigure(0, weight=1)
 
@@ -408,31 +528,150 @@ class AccountFrame(ttk.Frame):
                 account: BankAccount = self.winfo_toplevel().master.master.account  # type: ignore
 
                 try:
-                    amount = float(self.amount.get())
+                    amount = int(self.amount.get())
                 except ValueError:
-                    msgbox.showerror("Fel", "Summa ej ett flyttal")
+                    msgbox.showerror("Fel", "Summa ej ett giltigt heltal")
                     return
 
                 if amount <= 0:
-                    msgbox.showerror("Fel", "Ogiltig summa (antagligen negativ eller 0)")
-                    return
-                if account.balance - amount < 0:
-                    msgbox.showerror("Otillräckligt saldo", f"Pengarna på ditt saldo räcker inte till.\nDu kan som mest ta ut {account.balance} kr")
+                    msgbox.showerror(
+                        "Fel", "Ogiltig summa (antagligen negativ eller 0)"
+                    )
                     return
 
-                account.update({"balance": account.balance - amount})
+                try:
+                    account.update({"max_credit": amount})
+                except KeyError:
+                    msgbox.showerror(
+                        "Fel",
+                        "Kontot existerar inte i den globala databasen. Detta ska vara omöjligt så grattis, du har pajat min kod! (Det är antagligen Pythons GC som förstör, men ingen aning) Skapa om kontot om det ska användas igen.",  # NOQA
+                    )
+                    return
+
+                self.winfo_toplevel().master.master.load_account(account)  # type: ignore
+                self.winfo_toplevel().destroy()
+
+        class ChangeNamePrompt(tk.Toplevel):
+            """Prompt to change name on account"""
+
+            def __init__(self, container) -> None:
+                super().__init__(container)
+                # Initial setup
+                self.columnconfigure(0, weight=1)
+                self.rowconfigure(0, weight=1)
+
+                # Main frame
+                self.main_frame = ttk.Frame(self)
+                self.main_frame.grid(row=0, column=0, sticky="nsew")
+                self.main_frame.columnconfigure(0, weight=1)
+
+                # Change name label
+                self.change_name_label = ttk.Label(
+                    self.main_frame, text="Ändra namn", font=("Roboto", 24)
+                )
+                self.change_name_label.grid(row=0, column=0)
+                self.main_frame.rowconfigure(0, weight=3)
+
+                # New name entry and label
+                self.entry_label = ttk.Label(self.main_frame, text="Nytt namn:")
+                self.entry_label.grid(row=1, column=0, sticky="w")
+                self.main_frame.rowconfigure(1, weight=1)
+                self.new_val = tk.StringVar()
+                self.entry = ttk.Entry(self.main_frame, textvariable=self.new_val)
+                self.entry.grid(row=2, column=0)
+                self.rowconfigure(2, weight=1)
+                self.entry.focus()
+                self.entry.bind("<Return>", lambda e: self.confirm_button.invoke())
+
+                # Confirm and cancel button frame
+                self.button_frame = ttk.Frame(self.main_frame)
+                self.button_frame.grid(row=3, column=0, sticky="nsew")
+                self.main_frame.rowconfigure(3, weight=2)
+                self.button_frame.rowconfigure(0, weight=1)
+
+                # Confirm button
+                self.confirm_button = ttk.Button(
+                    self.button_frame, text="Ändra", command=self.confirm
+                )
+                self.confirm_button.grid(row=0, column=1)
+                self.button_frame.columnconfigure(1, weight=1)
+
+                # Cancel button
+                self.cancel_button = ttk.Button(
+                    self.button_frame,
+                    text="Tillbaka",
+                    command=self.winfo_toplevel().destroy,
+                )
+                self.cancel_button.grid(row=0, column=0)
+                self.button_frame.columnconfigure(0, weight=1)
+
+            def confirm(self) -> None:
+                """Commit the proposed change"""
+
+                new_val: str = (
+                    self.new_val.get().strip().replace('"', "").replace("'", "")
+                )
+                account: BankAccount = self.winfo_toplevel().master.master.account  # type: ignore
+
+                if new_val in string.digits.join(string.punctuation):
+                    msgbox.showerror(
+                        "Fel",
+                        f"Namnet får inte innehålla siffror ({string.digits}) eller specialkaratärer ({string.punctuation})",
+                    )
+                    return
+
+                new_val = new_val.title()
+
+                if not msgbox.askyesno(
+                    "Korrekt?", f"Är du nöjd med detta namn:\n{new_val}"
+                ):
+                    if not msgbox.askretrycancel(
+                        "Försök igen?", "Vill du försöka igen eller avbryta?"
+                    ):
+                        self.winfo_toplevel().destroy()
+                    return
+
+                try:
+                    account.update({"holder_name": new_val})
+                except KeyError:
+                    msgbox.showerror(
+                        "Fel",
+                        "Kontot existerar inte i den globala databasen. Detta ska vara omöjligt så grattis, du har pajat min kod! (Det är antagligen Pythons GC som förstör, men ingen aning) Skapa om kontot om det ska användas igen.",  # NOQA
+                    )
+                    return
+                except ValueError:
+                    msgbox.showerror(
+                        "Fel", "Namnet tillhör redan ett annat konto, välj ett annat"
+                    )
+
                 self.winfo_toplevel().master.master.load_account(account)  # type: ignore
                 self.winfo_toplevel().destroy()
 
         def make_add_money_window(self) -> None:
             """Creates add money popup"""
-            money_window = AccountFrame.AccountButtonsFrame.AddMoneyPrompt(self)
-            money_window.grab_set()
+            add_money_window = AccountFrame.AccountButtonsFrame.AddMoneyPrompt(self)
+            add_money_window.grab_set()
 
         def make_withdraw_money_window(self) -> None:
             """Creates withdraw money popup"""
-            money_window = AccountFrame.AccountButtonsFrame.WithdrawMoneyPrompt(self)
-            money_window.grab_set()
+            withdraw_money_window = (
+                AccountFrame.AccountButtonsFrame.WithdrawMoneyPrompt(self)
+            )
+            withdraw_money_window.grab_set()
+
+        def make_change_credit_window(self) -> None:
+            """Create change credit prompt"""
+            credit_window = AccountFrame.AccountButtonsFrame.ChangeCreditPrompt(self)
+            credit_window.grab_set()
+
+        def make_change_name_window(self) -> None:
+            name_window = AccountFrame.AccountButtonsFrame.ChangeNamePrompt(self)
+            name_window.grab_set()
+
+        def logout(self) -> None:
+            """Log the user out"""
+            self.winfo_toplevel().switch_to(0)  # type: ignore
+            self.winfo_toplevel().geometry("400x450")
 
     class HistoryFrame(ttk.Frame):
         """Frame for account transaction history"""
@@ -446,7 +685,9 @@ class AccountFrame(ttk.Frame):
     def load_account(self, account: BankAccount) -> None:
         """Updates all text to match new account"""
         self.header.header_text.set(f"Välkommer {account.holder_name}!")
-        self.account_info_frame.account_number_text.set(f"Kontonummer: {account.number}")
+        self.account_info_frame.account_number_text.set(
+            f"Kontonummer: {account.number}"
+        )
         self.account_info_frame.balance_text.set(f"Saldo: {account.balance}")
         self.account_info_frame.credit_text.set(f"Maximal kredit: {account.max_credit}")
         self.account = account
@@ -461,7 +702,9 @@ class InfoFrame(ttk.Frame):
         self.columnconfigure(0, weight=1)
 
         # Welcome text
-        self.welcome_text = ttk.Label(self, text=f"Välkommen till {Bank.BANK_NAME}!", font=("Roboto", 24))
+        self.welcome_text = ttk.Label(
+            self, text=f"Välkommen till {Bank.BANK_NAME}!", font=("Roboto", 24)
+        )
         self.welcome_text.grid(row=0, column=0, sticky="n")
         self.rowconfigure(0, weight=2)
 
@@ -473,7 +716,9 @@ class InfoFrame(ttk.Frame):
         self.rowconfigure(1, weight=3)
 
         # Login button
-        self.login_button = ttk.Button(self, text="Logga in", command=self.open_login_prompt)
+        self.login_button = ttk.Button(
+            self, text="Logga in", command=self.open_login_prompt
+        )
         self.login_button.grid(row=2, column=0, sticky="ew")
         self.rowconfigure(2, weight=2)
         self.login_button.bind("<Return>", lambda e: self.login_button.invoke())
@@ -485,7 +730,7 @@ class InfoFrame(ttk.Frame):
         self.signup_button.bind("<Return>", lambda e: print("test"))
 
         # Quit button
-        self.quit_button = ttk.Button(self, text="Lämna banken", command=self.winfo_toplevel().quit)
+        self.quit_button = ttk.Button(self, text="Lämna banken", command=self.winfo_toplevel().on_close)  # type: ignore
         self.quit_button.grid(row=4, column=0, sticky="ew")
         self.rowconfigure(4, weight=2)
 
@@ -551,13 +796,19 @@ class LoginWindow(tk.Toplevel):
             self.rowconfigure(4, weight=1)
 
             # Login button
-            self.login_button = ttk.Button(self, text="Logga in", command=lambda: self.login(self.username.get(), self.password.get()))
+            self.login_button = ttk.Button(
+                self,
+                text="Logga in",
+                command=lambda: self.login(self.username.get(), self.password.get()),
+            )
             self.login_button.grid(row=5, column=1)
             self.rowconfigure(5, weight=1)
             self.columnconfigure(1, weight=1)
 
             # Back button
-            self.back_button = ttk.Button(self, text="Tillbaka", command=self.winfo_toplevel().destroy)
+            self.back_button = ttk.Button(
+                self, text="Tillbaka", command=self.winfo_toplevel().destroy
+            )
             self.back_button.grid(row=5, column=0)
 
             for button in (self.login_button, self.back_button):
@@ -586,5 +837,7 @@ class LoginWindow(tk.Toplevel):
 
 if __name__ == "__main__":
     app = App()
-    Bank.load("test.json")
+    if msgbox.askyesno("Ladda konton", "Vill du ladda sparade konton från fil?"):
+        load_path = filedlg.askopenfilename(filetypes=[("JSON File", ".json")])
+        Bank.load(load_path)
     app.mainloop()

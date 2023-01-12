@@ -55,7 +55,15 @@ class BankAccount:
         Bank.add_account(self)
 
     def update(self, update: AccountData) -> None:
-        """Updates account data py parsing an AccountData dict into the appropriate attributes"""
+        """
+        Updates account data py parsing an AccountData dict into the appropriate attributes
+
+        Exceptions:
+            ValueError:
+                Raised if holder_name is in update and already exists in another account
+            KeyError:
+                Raised if the calling BankAccount doesn't exist in the Bank objects ledger, this is bad!
+        """
         self.data.update(update)
         og_name: str = self.holder_name
 
@@ -76,14 +84,10 @@ class BankAccount:
 
         try:
             Bank.update_account(self, og_name)
-        except ValueError:
-            # TODO:
-            # Add handling of improper account name selection
-            pass
-        except KeyError:
-            # TODO:
-            # Add handling of og_name doesn't exist
-            pass
+        except ValueError as exc:
+            raise ValueError("Name already exists in another account") from exc
+        except KeyError as exc:
+            raise KeyError("Original name doesn't exist in ledger of accounts") from exc
 
 
 class Bank:
@@ -137,9 +141,9 @@ class Bank:
         
         Exceptions:
             KeyError:
-                raises KeyError if the key originalAccountNum doesn't exist in Bank.accounts
+                raises KeyError if the key og_holder_name doesn't exist in Bank.accounts
             ValueError:
-                raises ValueError if the newly selected account number alreas exists in Bank.accounts
+                raises ValueError if the newly selected account name alreas exists in Bank.accounts
 
         Since exceptions stop excecution a try-except block is recommended with this method to preserve accounts in RAM
         """
@@ -148,7 +152,7 @@ class Bank:
             try:
                 cls.accounts.pop(og_holder_name)
             except KeyError as exc:
-                raise KeyError("Original account number does not exist in the ledger of accounts") from exc
+                raise KeyError("Original account name does not exist in the ledger of accounts") from exc
             else:
                 cls.accounts.update({updated_account.holder_name: updated_account})
         else:
